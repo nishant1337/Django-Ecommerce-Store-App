@@ -2,14 +2,18 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from .models import Category, Product, Client, Order
 from .forms import OrderForm, InterestForm, LoginForm
-from datetime import date
+from datetime import date, datetime
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 
 def index(request):
     cat_list = Category.objects.all().order_by('id')[:10]
-    return render(request, 'myapp/index.html', {'cat_list': cat_list})
+    if 'last_login' in request.session :
+        logininfo = request.session['last_login']
+    else :
+        logininfo = 'Your last login was more than an hour ago'
+    return render(request, 'myapp/index.html', {'cat_list': cat_list, 'logininfo':logininfo})
 
 def about(request):
     return render(request, 'myapp/about.html')
@@ -74,16 +78,19 @@ def user_login(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(username=username, password=password)
-        if user:
+        user = authenticate(username=username,password=password)
+        if user :
             if user.is_active:
-                login(request, user)
+                if 'last_login' not in request.session :
+                    request.session['last_login'] = str(datetime.now())
+                    request.session.set_expiry(3600)
+                login(request,user)
                 return HttpResponseRedirect(reverse('myapp:index'))
             else:
-                return HttpResponse('Your account is disabled.')
-        else:
-            return HttpResponse('Invalid login details.')
-    else:
+                return HttpResponse('Your account is disabled')
+        else :
+            return HttpResponse('Invalid Login details')
+    else :
         return render(request, 'myapp/login.html', {'LoginForm': LoginForm})
 
 
