@@ -1,0 +1,27 @@
+{% extends 'myapp/base.html' %}
+{% block myhdg %} Hello {{ user }} {% endblock %}
+{% block body_block %}
+    <body>
+     {% if prodlist %}
+        <h2> Products: </h2>
+        <ul>
+            {% for prods in prod_list %}
+            <li>
+                {{prods.name}}
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form action="/myapp/placeorder/" method="post">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit" value="submit">
+        {% if msg %}
+            <p>{{msg}}</p>
+        {% endif %}
+    </form>
+
+    </body>
+
+{% endblock %}
